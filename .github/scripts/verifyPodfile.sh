@@ -12,8 +12,27 @@ echo "Podfile.lock: $podfileLockSha"
 
 if [ "$podfileSha" == "$podfileLockSha" ]; then
     echo -e "${GREEN}Podfile verified!${NC}"
-    exit 0
 else
     echo -e "${RED}Error: Podfile.lock out of date with Podfile. Did you forget to run \`npx pod-install\`?${NC}"
     exit 1
 fi
+
+# Make sure Podfile.lock is synced with podspecs from npm packages
+
+PODSPECS=$( \
+  jq --raw-output --slurp 'map((.name + " (" + .version + ")")) | .[]' <<< "$( \
+    npx react-native config | \
+    jq '.dependencies[].platforms.ios.podspecPath | select( . != null )' | \
+    xargs -L 1 pod ipc spec --silent
+  )"
+)
+
+while read -r SPEC; do
+  if ! grep -q "$SPEC" ./ios/Podfile.lock; then
+    echo -e "${RED}ERROR: Podspec $SPEC not found in Podfile.lock. Did you forget to run \`pod install\`?"
+    exit 1
+  fi
+done <<< "$PODSPECS"
+
+echo -e "${GREEN} Podfile.lock is synced with podspecs."
+exit 0
