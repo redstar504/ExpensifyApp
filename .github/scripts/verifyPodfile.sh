@@ -14,13 +14,13 @@ echo "Podfile: $podfileSha"
 echo "Podfile.lock: $podfileLockSha"
 
 if [ "$podfileSha" == "$podfileLockSha" ]; then
-    echo -e "${GREEN}Podfile verified!${NC}"
+    echo -e "${GREEN}Podfile checksum verified!${NC}"
 else
-    echo -e "${RED}Error: Podfile.lock out of date with Podfile. Did you forget to run \`npx pod-install\`?${NC}"
+    echo -e "${RED}Error: Podfile.lock checksum mismatch. Did you forget to run \`npx pod-install\`?${NC}"
     exit 1
 fi
 
-# Maps a list of podspec paths to formatted Pod (version) format
+# Maps a list of podspec paths to formatted `Pod (version)` format
 _formatted_pods() {
     jq --raw-output --slurp 'map((.name + " (" + .version + ")")) | .[]' <<< "$( \
       echo "$1" | \
