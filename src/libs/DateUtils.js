@@ -53,6 +53,20 @@ function getLocalMomentFromDatetime(locale, datetime, currentSelectedTimezone = 
 }
 
 /**
+ * Determines whether the time is different given two timezone locale strings
+ *
+ * @param {String} timezone1
+ * @param {String} timezone2
+ *
+ * @returns  {Boolean}
+ *
+ * @private
+ */
+function hasTimezoneTimeDifference(timezone1, timezone2) {
+    return moment.tz(timezone1).utcOffset() !== moment.tz(timezone2).utcOffset();
+}
+
+/**
  * Formats an ISO-formatted datetime string to local date and time string
  *
  * e.g.
@@ -199,6 +213,7 @@ const DateUtils = {
     getMicroseconds,
     getDBTime,
     subtractMillisecondsFromDateTime,
+    hasTimezoneTimeDifference,
 };
 
 export default DateUtils;

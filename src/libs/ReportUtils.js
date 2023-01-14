@@ -391,12 +391,18 @@ function canShowReportRecipientLocalTime(personalDetails, report) {
     const reportRecipient = personalDetails[participantsWithoutExpensifyEmails[0]];
     const reportRecipientTimezone = lodashGet(reportRecipient, 'timezone', CONST.DEFAULT_TIME_ZONE);
     const isReportParticipantValidated = lodashGet(reportRecipient, 'validated', false);
+    const localTimezone = lodashGet(currentUserPersonalDetails, 'timezone', CONST.DEFAULT_TIME_ZONE);
+    const hasTimeDifference = localTimezone.selected
+        && reportRecipientTimezone.selected
+        && DateUtils.hasTimezoneTimeDifference(localTimezone.selected, reportRecipientTimezone.selected);
+
     return !hasMultipleParticipants
         && !isChatRoom(report)
         && reportRecipient
         && reportRecipientTimezone
         && reportRecipientTimezone.selected
-        && isReportParticipantValidated;
+        && isReportParticipantValidated
+        && hasTimeDifference;
 }
 
 /**
