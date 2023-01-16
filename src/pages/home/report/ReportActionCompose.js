@@ -49,6 +49,7 @@ import withWindowDimensions, {windowDimensionsPropTypes} from '../../../componen
 import withDrawerState from '../../../components/withDrawerState';
 import withLocalize, {withLocalizePropTypes} from '../../../components/withLocalize';
 import withKeyboardState, {keyboardStatePropTypes} from '../../../components/withKeyboardState';
+import ExceededCommentByteLimit from '../../../components/ExceededCommentByteLimit';
 
 const propTypes = {
     /** Beta features list */
@@ -530,7 +531,9 @@ class ReportActionCompose extends React.Component {
         const isComposeDisabled = this.props.isDrawerOpen && this.props.isSmallScreenWidth;
         const isBlockedFromConcierge = ReportUtils.chatIncludesConcierge(this.props.report) && User.isBlockedFromConcierge(this.props.blockedFromConcierge);
         const inputPlaceholder = this.getInputPlaceholder();
-        const hasExceededMaxCommentLength = this.comment.length > CONST.MAX_COMMENT_LENGTH;
+        const commentByteCount = ReportUtils.countBytes(this.comment);
+        const hasExceededMaxCommentLength = this.comment.length > CONST.MAX_COMMENT_LENGTH
+            || commentByteCount > CONST.BYTE_LIMIT;
 
         return (
             <View style={[
@@ -726,6 +729,7 @@ class ReportActionCompose extends React.Component {
                     {!this.props.isSmallScreenWidth && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
                     <ReportTypingIndicator reportID={this.props.reportID} />
                     <ExceededCommentLength commentLength={this.comment.length} />
+                    <ExceededCommentByteLimit byteCount={commentByteCount} />
                 </View>
                 {this.state.isDraggingOver && <ReportDropUI />}
             </View>

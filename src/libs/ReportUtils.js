@@ -638,6 +638,14 @@ function hasReportNameError(report) {
 }
 
 /**
+ * @param {String} str
+ * @returns {Number}
+ */
+function countBytes(str) {
+    return escape(str).length;
+}
+
+/**
  * @param {Number} sequenceNumber sequenceNumber must be provided and it must be a number. It cannot and should not be a clientID,
  *                                reportActionID, or anything else besides an estimate of what the next sequenceNumber will be for the
  *                                optimistic report action. Until we deprecate sequenceNumbers please assume that all report actions
@@ -1261,4 +1269,5 @@ export {
     isIOUReport,
     chatIncludesChronos,
     getNewMarkerReportActionID,
+    countBytes
 };

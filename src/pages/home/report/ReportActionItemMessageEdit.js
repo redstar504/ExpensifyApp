@@ -22,6 +22,8 @@ import CONST from '../../../CONST';
 import withWindowDimensions, {windowDimensionsPropTypes} from '../../../components/withWindowDimensions';
 import withLocalize, {withLocalizePropTypes} from '../../../components/withLocalize';
 import withKeyboardState, {keyboardStatePropTypes} from '../../../components/withKeyboardState';
+import ExceededCommentByteLimit from "../../../components/ExceededCommentByteLimit";
+import {countBytes} from "../../../libs/ReportUtils";
 
 const propTypes = {
     /** All the data of the action */
@@ -280,6 +282,7 @@ class ReportActionItemMessageEdit extends React.Component {
                         text={this.props.translate('common.saveChanges')}
                     />
                     <ExceededCommentLength commentLength={this.state.draft.length} />
+                    <ExceededCommentByteLimit byteCount={countBytes(this.state.draft)} />
                 </View>
             </View>
         );
