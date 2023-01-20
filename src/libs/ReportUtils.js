@@ -1252,6 +1252,24 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
         : '';
 }
 
+/**
+ * Replace code points > 127 with C escape sequences, and return the resulting string's overall length
+ * Used for compatibility with the backend auth validator for AddComment
+ * @param {String} input
+ * @returns {Number}
+ */
+function charLength(input) {
+    const str = input.replace(/[^\w @*-+./]/g, (char) => {
+        const code = char.charCodeAt(0);
+        if (code > 127) {
+            return `\\u${code.toString(16).padStart(4, '0')}`;
+        }
+        return char;
+    });
+
+    return str.length;
+}
+
 export {
     getReportParticipantsTitle,
     isReportMessageAttachment,
@@ -1302,4 +1320,5 @@ export {
     isIOUReport,
     chatIncludesChronos,
     getNewMarkerReportActionID,
+    charLength,
 };
