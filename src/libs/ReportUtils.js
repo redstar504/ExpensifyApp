@@ -1259,12 +1259,7 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
  * @returns {Number}
  */
 function charLength(input) {
-    const str = input.replace(/[^ -~]/g, (char) => {
-        const code = char.charCodeAt(0);
-        return `\\u${code.toString(16).padStart(4, '0')}`;
-    });
-
-    return str.length;
+    return input.replace(/[^ -~]/g, '\\u????').length;
 }
 
 export {
