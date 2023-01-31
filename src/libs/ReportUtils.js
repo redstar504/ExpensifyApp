@@ -1259,7 +1259,9 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
  * @returns {Number}
  */
 function charLength(input) {
-    return input.replace(/[^ -~]/g, '\\u????').length;
+    const parser = new ExpensiMark();
+    const comment = input.length < 10000 ? parser.replace(input) : input;
+    return comment.replace(/[^ -~]/g, '\\u????').length;
 }
 
 export {

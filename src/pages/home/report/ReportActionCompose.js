@@ -139,6 +139,8 @@ class ReportActionCompose extends React.Component {
         // React Native will retain focus on an input for native devices but web/mWeb behave differently so we have some focus management
         // code that will refocus the compose input after a user closes a modal or some other actions, see usage of ReportActionComposeFocusManager
         this.willBlurTextInputOnTapOutside = willBlurTextInputOnTapOutside();
+        this.typingTimeout = false;
+        this.nearCommentLimit = false;
 
         this.state = {
             isFocused: this.willBlurTextInputOnTapOutside && !this.props.modal.isVisible && !this.props.modal.willAlertModalBecomeVisible,
@@ -155,6 +157,7 @@ class ReportActionCompose extends React.Component {
 
             // If we are on a small width device then don't show last 3 items from conciergePlaceholderOptions
             conciergePlaceholderRandomIndex: _.random(this.props.translate('reportActionCompose.conciergePlaceholderOptions').length - (this.props.isSmallScreenWidth ? 4 : 1)),
+            commentLength: 0,
         };
     }
 
@@ -188,6 +191,17 @@ class ReportActionCompose extends React.Component {
 
         if (this.props.isComposerFullSize !== prevProps.isComposerFullSize) {
             this.setMaxLines();
+        }
+
+        if (prevProps.comment !== this.comment) {
+            clearTimeout(this.typingTimeout);
+            this.typingTimeout = setTimeout(() => {
+                const commentLength = this.comment.replace(/[^ -~]/g, '\\u????').length;
+                this.nearCommentLimit = CONST.MAX_COMMENT_LENGTH - commentLength <= 26;
+                this.setState({
+                    commentLength: ReportUtils.charLength(this.comment),
+                });
+            }, this.nearCommentLimit ? 0 : 500);
         }
 
         // As the report IDs change, make sure to update the composer comment as we need to make sure
@@ -533,8 +547,7 @@ class ReportActionCompose extends React.Component {
         const isComposeDisabled = this.props.isDrawerOpen && this.props.isSmallScreenWidth;
         const isBlockedFromConcierge = ReportUtils.chatIncludesConcierge(this.props.report) && User.isBlockedFromConcierge(this.props.blockedFromConcierge);
         const inputPlaceholder = this.getInputPlaceholder();
-        const encodedCommentLength = ReportUtils.charLength(this.comment);
-        const hasExceededMaxCommentLength = encodedCommentLength > CONST.MAX_COMMENT_LENGTH;
+        const hasExceededMaxCommentLength = this.state.commentLength > CONST.MAX_COMMENT_LENGTH;
 
         return (
             <View style={[
@@ -543,7 +556,7 @@ class ReportActionCompose extends React.Component {
             ]}
             >
                 {shouldShowReportRecipientLocalTime
-                    && <ParticipantLocalTime participant={reportRecipient} />}
+                    && <ParticipantLocalTime participant={reportRecipient}/>}
                 <View style={[
                     (!isBlockedFromConcierge && !this.props.disabled && (this.state.isFocused || this.state.isDraggingOver))
                         ? styles.chatItemComposeBoxFocusedColor
@@ -569,7 +582,8 @@ class ReportActionCompose extends React.Component {
                                             ]}
                                             >
                                                 {this.props.isComposerFullSize && (
-                                                    <Tooltip text={this.props.translate('reportActionCompose.collapse')}>
+                                                    <Tooltip
+                                                        text={this.props.translate('reportActionCompose.collapse')}>
                                                         <TouchableOpacity
                                                             onPress={(e) => {
                                                                 e.preventDefault();
@@ -581,7 +595,7 @@ class ReportActionCompose extends React.Component {
                                                             style={styles.composerSizeButton}
                                                             disabled={isBlockedFromConcierge || this.props.disabled}
                                                         >
-                                                            <Icon src={Expensicons.Collapse} />
+                                                            <Icon src={Expensicons.Collapse}/>
                                                         </TouchableOpacity>
                                                     </Tooltip>
 
@@ -599,7 +613,7 @@ class ReportActionCompose extends React.Component {
                                                             style={styles.composerSizeButton}
                                                             disabled={isBlockedFromConcierge || this.props.disabled}
                                                         >
-                                                            <Icon src={Expensicons.Expand} />
+                                                            <Icon src={Expensicons.Expand}/>
                                                         </TouchableOpacity>
                                                     </Tooltip>
                                                 )}
@@ -617,7 +631,7 @@ class ReportActionCompose extends React.Component {
                                                             style={styles.composerSizeButton}
                                                             disabled={isBlockedFromConcierge || this.props.disabled}
                                                         >
-                                                            <Icon src={Expensicons.Plus} />
+                                                            <Icon src={Expensicons.Plus}/>
                                                         </TouchableOpacity>
                                                     </View>
                                                 </Tooltip>
@@ -716,7 +730,8 @@ class ReportActionCompose extends React.Component {
                                     top: 3, right: 3, bottom: 3, left: 3,
                                 }}
                             >
-                                <Icon src={Expensicons.Send} fill={(this.state.isCommentEmpty || hasExceededMaxCommentLength) ? themeColors.icon : themeColors.textLight} />
+                                <Icon src={Expensicons.Send}
+                                      fill={(this.state.isCommentEmpty || hasExceededMaxCommentLength) ? themeColors.icon : themeColors.textLight}/>
                             </TouchableOpacity>
                         </Tooltip>
                     </View>
@@ -727,11 +742,12 @@ class ReportActionCompose extends React.Component {
                     styles.alignItemsCenter,
                     (!this.props.isSmallScreenWidth || (this.props.isSmallScreenWidth && !this.props.network.isOffline)) && styles.chatItemComposeSecondaryRow]}
                 >
-                    {!this.props.isSmallScreenWidth && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
-                    <ReportTypingIndicator reportID={this.props.reportID} />
-                    <ExceededCommentLength commentLength={encodedCommentLength} />
+                    {!this.props.isSmallScreenWidth &&
+                        <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]}/>}
+                    <ReportTypingIndicator reportID={this.props.reportID}/>
+                    <ExceededCommentLength commentLength={this.state.commentLength}/>
                 </View>
-                {this.state.isDraggingOver && <ReportDropUI />}
+                {this.state.isDraggingOver && <ReportDropUI/>}
             </View>
         );
     }
