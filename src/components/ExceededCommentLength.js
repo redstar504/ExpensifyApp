@@ -17,7 +17,8 @@ const COUNT_NORMALLY_UNTIL = 2500;
 const PHASED_KEYUP_DELAY = 500; // ms
 
 // When the encoded comment limit is nearly hit, start counting it in real-time so the counter updates rapidly
-const START_REALTIME_AT = CONST.MAX_COMMENT_LENGTH - 64;
+const START_REALTIME_AT_MIN = 14900;
+const START_REALTIME_AT_MAX = 15100;
 
 const ExceededCommentLength = (props) => {
     const comment = props.comment;
@@ -32,7 +33,7 @@ const ExceededCommentLength = (props) => {
                 const encodedHtmlLength = ReportUtils.commentLength(comment);
                 setCommentLength(encodedHtmlLength);
                 props.onExceededCommentLength(encodedHtmlLength > CONST.MAX_COMMENT_LENGTH);
-            }, START_REALTIME_AT >= commentLength ? PHASED_KEYUP_DELAY : 0);
+            }, true ? PHASED_KEYUP_DELAY : 0);
             return () => clearTimeout(keyupTimer);
         }
     }, [comment]);
