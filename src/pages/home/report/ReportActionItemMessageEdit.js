@@ -17,8 +17,7 @@ import EmojiPickerButton from '../../../components/EmojiPicker/EmojiPickerButton
 import * as ReportActionContextMenu from './ContextMenu/ReportActionContextMenu';
 import * as EmojiUtils from '../../../libs/EmojiUtils';
 import reportPropTypes from '../../reportPropTypes';
-import ExceededCommentLength from '../../../components/ExceededCommentLength';
-import CONST from '../../../CONST';
+import CommentLength from '../../../components/CommentLength';
 import withWindowDimensions, {windowDimensionsPropTypes} from '../../../components/withWindowDimensions';
 import withLocalize, {withLocalizePropTypes} from '../../../components/withLocalize';
 import withKeyboardState, {keyboardStatePropTypes} from '../../../components/withKeyboardState';
@@ -67,6 +66,7 @@ class ReportActionItemMessageEdit extends React.Component {
         this.triggerSaveOrCancel = this.triggerSaveOrCancel.bind(this);
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.addEmojiToTextBox = this.addEmojiToTextBox.bind(this);
+        this.onExceededMaxCommentLength = this.onExceededMaxCommentLength.bind(this);
         this.saveButtonID = 'saveButton';
         this.cancelButtonID = 'cancelButton';
         this.emojiButtonID = 'emojiButton';
@@ -81,6 +81,7 @@ class ReportActionItemMessageEdit extends React.Component {
                 end: draftMessage.length,
             },
             isFocused: false,
+            hasExceededMaxCommentLength: false,
         };
     }
 
@@ -91,6 +92,15 @@ class ReportActionItemMessageEdit extends React.Component {
      */
     onSelectionChange(e) {
         this.setState({selection: e.nativeEvent.selection});
+    }
+
+    /**
+     * Sets the composer length warnings and prevents sending a message that's too long
+     *
+     * @param {Boolean} hasExceededMaxCommentLength
+     */
+    onExceededMaxCommentLength(hasExceededMaxCommentLength) {
+        this.setState({hasExceededMaxCommentLength});
     }
 
     /**
@@ -154,7 +164,7 @@ class ReportActionItemMessageEdit extends React.Component {
      */
     publishDraft() {
         // Do nothing if draft exceed the character limit
-        if (this.state.draft.length > CONST.MAX_COMMENT_LENGTH) {
+        if (this.state.hasExceededMaxCommentLength) {
             return;
         }
 
@@ -214,7 +224,8 @@ class ReportActionItemMessageEdit extends React.Component {
     }
 
     render() {
-        const hasExceededMaxCommentLength = this.state.draft.length > CONST.MAX_COMMENT_LENGTH;
+        const hasExceededMaxCommentLength = this.state.hasExceededMaxCommentLength;
+
         return (
             <View style={styles.chatItemMessage}>
                 <View
@@ -279,7 +290,7 @@ class ReportActionItemMessageEdit extends React.Component {
                         onPress={this.publishDraft}
                         text={this.props.translate('common.saveChanges')}
                     />
-                    <ExceededCommentLength commentLength={this.state.draft.length} />
+                    <CommentLength comment={this.state.draft} onExceededMaxCommentLength={this.onExceededMaxCommentLength} />
                 </View>
             </View>
         );
