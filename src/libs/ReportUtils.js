@@ -633,6 +633,17 @@ function hasReportNameError(report) {
 }
 
 /**
+ * @param {String} text
+ * @param {Object} parser
+ * @returns {String}
+ */
+function parseComment(text, parser = new ExpensiMark()) {
+    const parsedComment = parser.replace(text);
+    console.log("parsing comment");
+    return text.length < 10000 ? parsedComment : text;
+}
+
+/**
  * @param {String} [text]
  * @param {File} [file]
  * @returns {Object}
@@ -641,7 +652,7 @@ function buildOptimisticAddCommentReportAction(text, file) {
     // For comments shorter than 10k chars, convert the comment from MD into HTML because that's how it is stored in the database
     // For longer comments, skip parsing and display plaintext for performance reasons. It takes over 40s to parse a 100k long string!!
     const parser = new ExpensiMark();
-    const commentText = text.length < 10000 ? parser.replace(text) : text;
+    const commentText = parseComment(text, parser);
     const isAttachment = _.isEmpty(text) && file !== undefined;
     const attachmentInfo = isAttachment ? file : {};
     const htmlForNewComment = isAttachment ? 'Uploading Attachment...' : commentText;
@@ -1255,13 +1266,11 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
 /**
  * Replace code points > 127 with C escape sequences, and return the resulting string's overall length
  * Used for compatibility with the backend auth validator for AddComment
- * @param {String} input
+ * @param {String} text
  * @returns {Number}
  */
-function charLength(input) {
-    const parser = new ExpensiMark();
-    const comment = input.length < 10000 ? parser.replace(input) : input;
-    return comment.replace(/[^ -~]/g, '\\u????').length;
+function commentLength(text) {
+    return parseComment(text).replace(/[^ -~]/g, '\\u????').length;
 }
 
 export {
@@ -1314,5 +1323,5 @@ export {
     isIOUReport,
     chatIncludesChronos,
     getNewMarkerReportActionID,
-    charLength,
+    commentLength,
 };
