@@ -17,7 +17,7 @@ import EmojiPickerButton from '../../../components/EmojiPicker/EmojiPickerButton
 import * as ReportActionContextMenu from './ContextMenu/ReportActionContextMenu';
 import * as EmojiUtils from '../../../libs/EmojiUtils';
 import reportPropTypes from '../../reportPropTypes';
-import ExceededCommentLength from '../../../components/ExceededCommentLength';
+import CommentLength from '../../../components/CommentLength';
 import CONST from '../../../CONST';
 import withWindowDimensions, {windowDimensionsPropTypes} from '../../../components/withWindowDimensions';
 import withLocalize, {withLocalizePropTypes} from '../../../components/withLocalize';
@@ -67,6 +67,7 @@ class ReportActionItemMessageEdit extends React.Component {
         this.triggerSaveOrCancel = this.triggerSaveOrCancel.bind(this);
         this.onSelectionChange = this.onSelectionChange.bind(this);
         this.addEmojiToTextBox = this.addEmojiToTextBox.bind(this);
+        this.setCommentLengthWarnings = this.setCommentLengthWarnings.bind(this);
         this.saveButtonID = 'saveButton';
         this.cancelButtonID = 'cancelButton';
         this.emojiButtonID = 'emojiButton';
@@ -81,6 +82,7 @@ class ReportActionItemMessageEdit extends React.Component {
                 end: draftMessage.length,
             },
             isFocused: false,
+            showCommentLengthWarnings: false,
         };
     }
 
@@ -91,6 +93,10 @@ class ReportActionItemMessageEdit extends React.Component {
      */
     onSelectionChange(e) {
         this.setState({selection: e.nativeEvent.selection});
+    }
+
+    setCommentLengthWarnings(showCommentLengthWarnings) {
+        this.setState({showCommentLengthWarnings});
     }
 
     /**
@@ -214,7 +220,8 @@ class ReportActionItemMessageEdit extends React.Component {
     }
 
     render() {
-        const hasExceededMaxCommentLength = this.state.draft.length > CONST.MAX_COMMENT_LENGTH;
+        const showCommentLengthWarnings = this.state.showCommentLengthWarnings;
+
         return (
             <View style={styles.chatItemMessage}>
                 <View
@@ -222,7 +229,7 @@ class ReportActionItemMessageEdit extends React.Component {
                         styles.chatItemComposeBox,
                         styles.flexRow,
                         this.state.isFocused ? styles.chatItemComposeBoxFocusedColor : styles.chatItemComposeBoxColor,
-                        hasExceededMaxCommentLength && styles.borderColorDanger,
+                        showCommentLengthWarnings && styles.borderColorDanger,
                     ]}
                 >
                     <Composer
@@ -273,13 +280,13 @@ class ReportActionItemMessageEdit extends React.Component {
                     <Button
                         small
                         success
-                        isDisabled={hasExceededMaxCommentLength}
+                        isDisabled={showCommentLengthWarnings}
                         nativeID={this.saveButtonID}
                         style={[styles.mr2]}
                         onPress={this.publishDraft}
                         text={this.props.translate('common.saveChanges')}
                     />
-                    <ExceededCommentLength commentLength={this.state.draft.length} />
+                    <CommentLength comment={this.state.draft} onExceededCommentLength={this.setCommentLengthWarnings} />
                 </View>
             </View>
         );

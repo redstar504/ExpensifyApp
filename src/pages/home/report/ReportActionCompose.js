@@ -39,7 +39,7 @@ import EmojiPickerButton from '../../../components/EmojiPicker/EmojiPickerButton
 import * as DeviceCapabilities from '../../../libs/DeviceCapabilities';
 import toggleReportActionComposeView from '../../../libs/toggleReportActionComposeView';
 import OfflineIndicator from '../../../components/OfflineIndicator';
-import ExceededCommentLength from '../../../components/ExceededCommentLength';
+import CommentLength from '../../../components/CommentLength';
 import withNavigationFocus from '../../../components/withNavigationFocus';
 import * as EmojiUtils from '../../../libs/EmojiUtils';
 import reportPropTypes from '../../reportPropTypes';
@@ -135,6 +135,7 @@ class ReportActionCompose extends React.Component {
         this.getIOUOptions = this.getIOUOptions.bind(this);
         this.addAttachment = this.addAttachment.bind(this);
         this.comment = props.comment;
+        this.setCommentLengthWarnings = this.setCommentLengthWarnings.bind(this);
 
         // React Native will retain focus on an input for native devices but web/mWeb behave differently so we have some focus management
         // code that will refocus the compose input after a user closes a modal or some other actions, see usage of ReportActionComposeFocusManager
@@ -155,6 +156,7 @@ class ReportActionCompose extends React.Component {
 
             // If we are on a small width device then don't show last 3 items from conciergePlaceholderOptions
             conciergePlaceholderRandomIndex: _.random(this.props.translate('reportActionCompose.conciergePlaceholderOptions').length - (this.props.isSmallScreenWidth ? 4 : 1)),
+            showCommentLengthWarnings: false,
         };
     }
 
@@ -205,6 +207,10 @@ class ReportActionCompose extends React.Component {
 
     onSelectionChange(e) {
         this.setState({selection: e.nativeEvent.selection});
+    }
+
+    setCommentLengthWarnings(showCommentLengthWarnings) {
+        this.setState({showCommentLengthWarnings});
     }
 
     /**
@@ -470,6 +476,7 @@ class ReportActionCompose extends React.Component {
     prepareCommentAndResetComposer() {
         const trimmedComment = this.comment.trim();
 
+        // Don't submit empty comments or comments that exceed the character limit
         if (this.state.isCommentEmpty || ReportUtils.commentLength(trimmedComment) > CONST.MAX_COMMENT_LENGTH) {
             return '';
         }
@@ -533,8 +540,7 @@ class ReportActionCompose extends React.Component {
         const isComposeDisabled = this.props.isDrawerOpen && this.props.isSmallScreenWidth;
         const isBlockedFromConcierge = ReportUtils.chatIncludesConcierge(this.props.report) && User.isBlockedFromConcierge(this.props.blockedFromConcierge);
         const inputPlaceholder = this.getInputPlaceholder();
-        const encodedCommentLength = ReportUtils.commentLength(this.comment);
-        const hasExceededMaxCommentLength = encodedCommentLength > CONST.MAX_COMMENT_LENGTH;
+        const showCommentLengthWarnings = this.state.showCommentLengthWarnings;
 
         return (
             <View style={[
@@ -551,7 +557,7 @@ class ReportActionCompose extends React.Component {
                     styles.flexRow,
                     styles.chatItemComposeBox,
                     this.props.isComposerFullSize && styles.chatItemFullComposeBox,
-                    hasExceededMaxCommentLength && styles.borderColorDanger,
+                    showCommentLengthWarnings && styles.borderColorDanger,
                 ]}
                 >
                     <AttachmentModal
@@ -704,19 +710,19 @@ class ReportActionCompose extends React.Component {
                         <Tooltip text={this.props.translate('common.send')}>
                             <TouchableOpacity
                                 style={[styles.chatItemSubmitButton,
-                                    (this.state.isCommentEmpty || hasExceededMaxCommentLength) ? undefined : styles.buttonSuccess,
+                                    (this.state.isCommentEmpty || showCommentLengthWarnings) ? undefined : styles.buttonSuccess,
                                 ]}
                                 onPress={this.submitForm}
 
                                 // Keep focus on the composer when Send message is clicked.
                                 // eslint-disable-next-line react/jsx-props-no-multi-spaces
                                 onMouseDown={e => e.preventDefault()}
-                                disabled={this.state.isCommentEmpty || isBlockedFromConcierge || this.props.disabled || hasExceededMaxCommentLength}
+                                disabled={this.state.isCommentEmpty || isBlockedFromConcierge || this.props.disabled || showCommentLengthWarnings}
                                 hitSlop={{
                                     top: 3, right: 3, bottom: 3, left: 3,
                                 }}
                             >
-                                <Icon src={Expensicons.Send} fill={(this.state.isCommentEmpty || hasExceededMaxCommentLength) ? themeColors.icon : themeColors.textLight} />
+                                <Icon src={Expensicons.Send} fill={(this.state.isCommentEmpty || showCommentLengthWarnings) ? themeColors.icon : themeColors.textLight} />
                             </TouchableOpacity>
                         </Tooltip>
                     </View>
@@ -729,7 +735,7 @@ class ReportActionCompose extends React.Component {
                 >
                     {!this.props.isSmallScreenWidth && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
                     <ReportTypingIndicator reportID={this.props.reportID} />
-                    <ExceededCommentLength commentLength={encodedCommentLength} />
+                    <CommentLength comment={this.comment} onExceededCommentLength={this.setCommentLengthWarnings} />
                 </View>
                 {this.state.isDraggingOver && <ReportDropUI />}
             </View>
