@@ -639,7 +639,6 @@ function hasReportNameError(report) {
  */
 function parseComment(text, parser = new ExpensiMark()) {
     const parsedComment = parser.replace(text);
-    console.log("parsing comment");
     return text.length < 10000 ? parsedComment : text;
 }
 

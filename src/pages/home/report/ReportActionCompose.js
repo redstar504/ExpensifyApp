@@ -93,6 +93,9 @@ const propTypes = {
     /** Whether user interactions should be disabled */
     disabled: PropTypes.bool,
 
+    /** Should we notify that comment length is exceeded */
+    showCommentLengthIndicators: PropTypes.bool,
+
     // The NVP describing a user's block status
     blockedFromConcierge: PropTypes.shape({
         // The date that the user will be unblocked
@@ -135,13 +138,11 @@ class ReportActionCompose extends React.Component {
         this.getIOUOptions = this.getIOUOptions.bind(this);
         this.addAttachment = this.addAttachment.bind(this);
         this.comment = props.comment;
+        this.setCommentLengthIndicators = this.setCommentLengthIndicators.bind(this);
 
         // React Native will retain focus on an input for native devices but web/mWeb behave differently so we have some focus management
         // code that will refocus the compose input after a user closes a modal or some other actions, see usage of ReportActionComposeFocusManager
         this.willBlurTextInputOnTapOutside = willBlurTextInputOnTapOutside();
-
-        this.typingTimeout = false;
-        this.nearCommentLimit = false;
 
         this.state = {
             isFocused: this.willBlurTextInputOnTapOutside && !this.props.modal.isVisible && !this.props.modal.willAlertModalBecomeVisible,
@@ -158,7 +159,7 @@ class ReportActionCompose extends React.Component {
 
             // If we are on a small width device then don't show last 3 items from conciergePlaceholderOptions
             conciergePlaceholderRandomIndex: _.random(this.props.translate('reportActionCompose.conciergePlaceholderOptions').length - (this.props.isSmallScreenWidth ? 4 : 1)),
-            commentLength: 0,
+            showCommentLengthIndicators: false,
         };
     }
 
@@ -194,18 +195,6 @@ class ReportActionCompose extends React.Component {
             this.setMaxLines();
         }
 
-        if (prevProps.comment !== this.comment) {
-            clearTimeout(this.typingTimeout);
-            this.typingTimeout = setTimeout(() => {
-                const commentLength = this.comment.replace(/[^ -~]/g, '\\u????').length;
-                this.nearCommentLimit = CONST.MAX_COMMENT_LENGTH - commentLength <= 26;
-                this.setState({
-                    commentLength: ReportUtils.commentLength(this.comment),
-                });
-            }, this.nearCommentLimit ? 0 : 500);
-        }
-
-
         // As the report IDs change, make sure to update the composer comment as we need to make sure
         // we do not show incorrect data in there (ie. draft of message from other report).
         if (this.props.report.reportID === prevProps.report.reportID) {
@@ -221,6 +210,10 @@ class ReportActionCompose extends React.Component {
 
     onSelectionChange(e) {
         this.setState({selection: e.nativeEvent.selection});
+    }
+
+    setCommentLengthIndicators(showCommentLengthIndicators) {
+        this.setState({showCommentLengthIndicators});
     }
 
     /**
@@ -486,8 +479,6 @@ class ReportActionCompose extends React.Component {
     prepareCommentAndResetComposer() {
         const trimmedComment = this.comment.trim();
 
-        console.log('prepareCommentAndResetComposer');
-
         // Don't submit empty comments or comments that exceed the character limit
         if (this.state.isCommentEmpty || ReportUtils.commentLength(trimmedComment) > CONST.MAX_COMMENT_LENGTH) {
             return '';
@@ -552,7 +543,7 @@ class ReportActionCompose extends React.Component {
         const isComposeDisabled = this.props.isDrawerOpen && this.props.isSmallScreenWidth;
         const isBlockedFromConcierge = ReportUtils.chatIncludesConcierge(this.props.report) && User.isBlockedFromConcierge(this.props.blockedFromConcierge);
         const inputPlaceholder = this.getInputPlaceholder();
-        const hasExceededMaxCommentLength = this.state.commentLength > CONST.MAX_COMMENT_LENGTH;
+        const hasExceededMaxCommentLength = this.state.showCommentLengthIndicators;
 
         return (
             <View style={[
@@ -747,7 +738,7 @@ class ReportActionCompose extends React.Component {
                 >
                     {!this.props.isSmallScreenWidth && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
                     <ReportTypingIndicator reportID={this.props.reportID} />
-                    <ExceededCommentLength commentLength={this.state.commentLength} />
+                    <ExceededCommentLength comment={this.comment} onExceededCommentLength={this.setCommentLengthIndicators} />
                 </View>
                 {this.state.isDraggingOver && <ReportDropUI />}
             </View>
