@@ -22,6 +22,7 @@ class CommentLength extends PureComponent {
             commentLength: 0,
         };
 
+        // By debouncing, we defer the calculation until there is a break in typing
         this.updateCommentLength = debounce(this.updateCommentLength.bind(this), 500);
     }
 
