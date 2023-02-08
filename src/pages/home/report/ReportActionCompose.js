@@ -39,7 +39,7 @@ import EmojiPickerButton from '../../../components/EmojiPicker/EmojiPickerButton
 import * as DeviceCapabilities from '../../../libs/DeviceCapabilities';
 import toggleReportActionComposeView from '../../../libs/toggleReportActionComposeView';
 import OfflineIndicator from '../../../components/OfflineIndicator';
-import ExceededCommentLength from '../../../components/ExceededCommentLength';
+import CommentLength from '../../../components/CommentLength';
 import withNavigationFocus from '../../../components/withNavigationFocus';
 import * as EmojiUtils from '../../../libs/EmojiUtils';
 import reportPropTypes from '../../reportPropTypes';
@@ -134,6 +134,7 @@ class ReportActionCompose extends React.Component {
         this.getInputPlaceholder = this.getInputPlaceholder.bind(this);
         this.getIOUOptions = this.getIOUOptions.bind(this);
         this.addAttachment = this.addAttachment.bind(this);
+        this.setExceededMaxCommentLength = this.setExceededMaxCommentLength.bind(this);
         this.comment = props.comment;
 
         // React Native will retain focus on an input for native devices but web/mWeb behave differently so we have some focus management
@@ -155,6 +156,7 @@ class ReportActionCompose extends React.Component {
 
             // If we are on a small width device then don't show last 3 items from conciergePlaceholderOptions
             conciergePlaceholderRandomIndex: _.random(this.props.translate('reportActionCompose.conciergePlaceholderOptions').length - (this.props.isSmallScreenWidth ? 4 : 1)),
+            hasExceededMaxCommentLength: false,
         };
     }
 
@@ -321,6 +323,15 @@ class ReportActionCompose extends React.Component {
             maxLines = CONST.COMPOSER.MAX_LINES_FULL;
         }
         this.setState({maxLines});
+    }
+
+    /**
+     * Updates the exceeded comment length state of the composer
+     *
+     * @param {Boolean} hasExceededMaxCommentLength
+     */
+    setExceededMaxCommentLength(hasExceededMaxCommentLength) {
+        this.setState({hasExceededMaxCommentLength});
     }
 
     isEmptyChat() {
@@ -534,8 +545,7 @@ class ReportActionCompose extends React.Component {
         const isComposeDisabled = this.props.isDrawerOpen && this.props.isSmallScreenWidth;
         const isBlockedFromConcierge = ReportUtils.chatIncludesConcierge(this.props.report) && User.isBlockedFromConcierge(this.props.blockedFromConcierge);
         const inputPlaceholder = this.getInputPlaceholder();
-        const encodedCommentLength = ReportUtils.getCommentLength(this.comment);
-        const hasExceededMaxCommentLength = encodedCommentLength > CONST.MAX_COMMENT_LENGTH;
+        const hasExceededMaxCommentLength = this.state.hasExceededMaxCommentLength;
 
         return (
             <View style={[
@@ -730,7 +740,7 @@ class ReportActionCompose extends React.Component {
                 >
                     {!this.props.isSmallScreenWidth && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
                     <ReportTypingIndicator reportID={this.props.reportID} />
-                    <ExceededCommentLength commentLength={encodedCommentLength} />
+                    <CommentLength comment={this.comment} onExceededMaxCommentLength={this.setExceededMaxCommentLength} />
                 </View>
                 {this.state.isDraggingOver && <ReportDropUI />}
             </View>
