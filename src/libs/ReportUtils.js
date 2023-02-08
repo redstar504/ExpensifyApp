@@ -735,6 +735,16 @@ function hasReportNameError(report) {
 }
 
 /**
+ * @param {String} text
+ * @param {Object} parser
+ * @returns {String}
+ */
+function getParsedComment(text, parser = new ExpensiMark()) {
+    const parsedComment = parser.replace(text);
+    return text.length < 10000 ? parsedComment : text;
+}
+
+/**
  * @param {String} [text]
  * @param {File} [file]
  * @returns {Object}
@@ -743,7 +753,7 @@ function buildOptimisticAddCommentReportAction(text, file) {
     // For comments shorter than 10k chars, convert the comment from MD into HTML because that's how it is stored in the database
     // For longer comments, skip parsing and display plaintext for performance reasons. It takes over 40s to parse a 100k long string!!
     const parser = new ExpensiMark();
-    const commentText = text.length < 10000 ? parser.replace(text) : text;
+    const commentText = text.length < 10000 ? getParsedComment(text, parser) : text;
     const isAttachment = _.isEmpty(text) && file !== undefined;
     const attachmentInfo = isAttachment ? file : {};
     const htmlForNewComment = isAttachment ? 'Uploading Attachment...' : commentText;
@@ -1383,13 +1393,14 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
 }
 
 /**
- * Replace code points > 127 with C escape sequences, and return the resulting string's overall length
+ * Perform the markdown conversion, and then replace code points > 127 with C escape sequences
+ * Return the resulting string's overall length
  * Used for compatibility with the backend auth validator for AddComment
- * @param {String} textComment
+ * @param {String} text
  * @returns {Number}
  */
-function getCommentLength(textComment) {
-    return textComment.replace(/[^ -~]/g, '\\u????').length;
+function getCommentLength(text) {
+    return getParsedComment(text).replace(/[^ -~]/g, '\\u????').trim().length;
 }
 
 /**
