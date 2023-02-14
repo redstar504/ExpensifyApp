@@ -120,16 +120,17 @@ const ReportActionItemFragment = (props) => {
                 );
             }
 
-            const containsOnlyEmoji = EmojiUtils.containsOnlyEmojis(text);
+            const emojiOnlyComment = EmojiUtils.containsOnlyEmojis(text);
+            text = StyleUtils.convertToLTR(Str.htmlDecode(text));
 
             return (
                 <Text
                     selectable={!DeviceCapabilities.canUseTouchScreen() || !props.isSmallScreenWidth}
                     style={[styles.ltr, ...props.style]}
                 >
-                    {_.map([...text], x => (x.match(/[^ -~]+/g)
-                        ? <Text family="EMOJI_TEXT_FONT" style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined]}>{x}</Text>
-                        : <>{StyleUtils.convertToLTR(Str.htmlDecode(x))}</>))}
+                    {_.map([...text], char => (EmojiUtils.containsOnlyEmojis(char)
+                        ? <Text family="EMOJI_TEXT_FONT" style={[emojiOnlyComment ? styles.onlyEmojisText : undefined]}>{char}</Text>
+                        : <>{char}</>))}
                     {props.fragment.isEdited && (
                     <Text
                         fontSize={variables.fontSizeSmall}
