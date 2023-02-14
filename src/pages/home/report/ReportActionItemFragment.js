@@ -98,7 +98,8 @@ const ReportActionItemFragment = (props) => {
                         )
                 );
             }
-            const {html, text} = props.fragment;
+            const {html} = props.fragment;
+            let text = props.fragment.text;
 
             // If the only difference between fragment.text and fragment.html is <br /> tags
             // we render it as text, not as html.
@@ -117,13 +118,20 @@ const ReportActionItemFragment = (props) => {
                     />
                 );
             }
+
+            const containsOnlyEmoji = EmojiUtils.containsOnlyEmojis(text);
+
             return (
                 <Text
                     family="EMOJI_TEXT_FONT"
                     selectable={!DeviceCapabilities.canUseTouchScreen() || !props.isSmallScreenWidth}
-                    style={[EmojiUtils.containsOnlyEmojis(text) ? styles.onlyEmojisText : undefined, styles.ltr, ...props.style]}
+                    style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined, styles.ltr, ...props.style]}
                 >
-                    {StyleUtils.convertToLTR(Str.htmlDecode(text))}
+                    {text.split('').map(x => x.match(/[^ -~]/g) ?
+                        <Text style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined, {fontFamily: 'System'}]}>{x}</Text>
+                        : <>txt</>
+                    )}
+                    {/*{StyleUtils.convertToLTR(Str.htmlDecode(text))}*/}
                     {props.fragment.isEdited && (
                     <Text
                         fontSize={variables.fontSizeSmall}
