@@ -2,6 +2,7 @@ import React, {memo} from 'react';
 import {ActivityIndicator, View} from 'react-native';
 import PropTypes from 'prop-types';
 import Str from 'expensify-common/lib/str';
+import _ from 'underscore';
 import reportActionFragmentPropTypes from './reportActionFragmentPropTypes';
 import styles from '../../../styles/styles';
 import variables from '../../../styles/variables';
@@ -125,13 +126,11 @@ const ReportActionItemFragment = (props) => {
                 <Text
                     family="EMOJI_TEXT_FONT"
                     selectable={!DeviceCapabilities.canUseTouchScreen() || !props.isSmallScreenWidth}
-                    style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined, styles.ltr, ...props.style]}
+                    style={[styles.ltr, ...props.style]}
                 >
-                    {[...text].map(x => x.match(/[^ -~]+/g) ?
-                        <Text style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined, {fontFamily: 'System'}]}>{x}</Text>
-                        : <>txt</>
-                    )}
-                    {/*{StyleUtils.convertToLTR(Str.htmlDecode(text))}*/}
+                    {_.map([...text], x => (x.match(/[^ -~]+/g)
+                        ? <Text style={[containsOnlyEmoji ? styles.onlyEmojisText : undefined, {fontFamily: 'System'}]}>{x}</Text>
+                        : <>{StyleUtils.convertToLTR(Str.htmlDecode(x))}</>))}
                     {props.fragment.isEdited && (
                     <Text
                         fontSize={variables.fontSizeSmall}
