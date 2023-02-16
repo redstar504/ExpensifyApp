@@ -1400,6 +1400,7 @@ function getNewMarkerReportActionID(report, sortedAndFilteredReportActions) {
  * @returns {Number}
  */
 function getCommentLength(textComment) {
+    console.log('counting comment');
     return getParsedComment(textComment).replace(/[^ -~]/g, '\\u????').trim().length;
 }
 

@@ -23,21 +23,23 @@ class CommentLength extends PureComponent {
         };
 
         // By debouncing, we defer the calculation until there is a break in typing
-        this.updateCommentLength = debounce(this.updateCommentLength.bind(this), 500);
+        this.updateCommentLength = debounce(this.updateCommentLength, 500).bind(this);
     }
 
     componentDidMount() {
         this.updateCommentLength();
     }
 
-    componentDidUpdate() {
-        this.updateCommentLength();
+    componentDidUpdate(prevProps) {
+        if (prevProps.comment !== this.props.comment) {
+            this.updateCommentLength();
+        }
     }
 
     updateCommentLength() {
         const commentLength = ReportUtils.getCommentLength(this.props.comment);
         this.setState({commentLength});
-        this.props.onExceededMaxCommentLength(commentLength > CONST.MAX_COMMENT_LENGTH);
+        this.props.onExceededMaxCommentLength(this.commentLength > CONST.MAX_COMMENT_LENGTH);
     }
 
     render() {
