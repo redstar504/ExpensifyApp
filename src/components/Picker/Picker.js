@@ -3,13 +3,13 @@ import React, {PureComponent} from 'react';
 import {View} from 'react-native';
 import PropTypes from 'prop-types';
 import RNPickerSelect from 'react-native-picker-select';
-import Icon from './Icon';
-import * as Expensicons from './Icon/Expensicons';
-import FormHelpMessage from './FormHelpMessage';
-import Text from './Text';
-import styles from '../styles/styles';
-import themeColors from '../styles/themes/default';
-import {ScrollContext} from './ScrollViewWithContext';
+import Icon from '../Icon';
+import * as Expensicons from '../Icon/Expensicons';
+import FormHelpMessage from '../FormHelpMessage';
+import Text from '../Text';
+import styles from '../../styles/styles';
+import themeColors from '../../styles/themes/default';
+import {ScrollContext} from '../ScrollViewWithContext';
 
 const propTypes = {
     /** Picker label */
@@ -75,6 +75,9 @@ const propTypes = {
             current: PropTypes.element,
         }),
     ]),
+
+    /** Additional events passed to the core Picker for specific platforms such as web */
+    additionalPickerEvents: PropTypes.func,
 };
 
 const defaultProps = {
@@ -97,6 +100,7 @@ const defaultProps = {
     ),
     onBlur: () => {},
     innerRef: () => {},
+    additionalPickerEvents: () => {},
 };
 
 class Picker extends PureComponent {
@@ -193,21 +197,13 @@ class Picker extends PureComponent {
                                 this.setState({isOpen: false});
                                 this.props.onBlur();
                             },
-
-                            // The following 2 handlers are specific to web (onChange overrides onValueChange on web)
-                            // They are used to make the picker indicator behave the same way as it does on native
-                            onMouseDown: () => {
-                                this.setState({isOpen: true});
-                            },
-                            onChange: (e) => {
-                                if (e.target.selectedIndex === undefined) {
-                                    return;
-                                }
-                                const index = e.target.selectedIndex;
-                                const value = e.target.options[index].value;
-                                this.onInputChange(value, index);
-                                this.setState({isOpen: false});
-                            },
+                            ...this.props.additionalPickerEvents(
+                                () => this.setState({isOpen: true}),
+                                (value, index) => {
+                                    this.onInputChange(value, index);
+                                    this.setState({isOpen: false});
+                                },
+                            ),
                         }}
                         ref={(el) => {
                             if (!_.isFunction(this.props.innerRef)) {
